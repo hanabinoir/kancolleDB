@@ -90,31 +90,27 @@ def create_ship_list():
 
 def insert_ship_list():
     # Navigate to a tag and its parent row
-    ship_stats["Name"] = driver.find_element(By.XPATH, "//span[contains(@id, 'shiplistkai')]/a")
-    ship_records = ship_stats["Name"].find_elements(By.XPATH, "../../../../tr")
-    record_index = 177
+    ship_list_tbody = driver.find_elements(By.XPATH, "//tbody")
+    ship_records = ship_list_tbody[1].find_elements(By.XPATH, "tr")
+    record_index = 231
 
     # Get the values of the fields from the row
     while(record_index < len(ship_records)):
     # for record in ship_records:
         record_index += 1
-        # fields = record.find_elements(By.XPATH, "td")
-        try:
-            # # ship_stats["Name"] = fields[1].find_element(
-            # #     By.XPATH,
-            # #     "/span[contains(@id, 'shiplistkai')]/a"
-            # # ).text.strip()
-            print("index: " + str(record_index))
-            fields = ship_records[record_index].find_elements(By.XPATH, "td")
-            query = "INSERT INTO `kancolle`.`ship_list` VALUES ("
-            for i in range(0, 18):
-                value = ""
+        print("index: " + str(record_index))
+
+        query = "INSERT INTO `kancolle`.`ship_list` VALUES ("
+        value = ""
+        for i in range(0, 18):
+            try:
+                fields = ship_records[record_index].find_elements(By.XPATH, "td")
                 if '\n' in fields[i].text:
                     value_list = fields[i].text.split('\n')
                     if '#' in value_list[1]:
                         value_list[1] = value_list[1][1:]
                     query += "'" + value_list[0].strip() + "', '" + value_list[1].strip() + "', "
-                    print(value + " ")
+                    print(value_list[0] + " " + value_list[1])
                 else:
                     value = fields[i].text.strip()
                     if i == 1 or i == 2:
@@ -122,17 +118,17 @@ def insert_ship_list():
                     else:
                         query += "'" + value + "', "
                     print(value + " ")
+            except IndexError:
+                print("Table heading detected\n")
 
-            print("-----------")
-            query = query[:-2] + ");"
-
-            # in case that the row is empty
-            if value is not "":
+        # in case that the row is empty
+        query = query[:-2] + ");"
+        if value is not "":
+            try:
                 cursor.execute(query)
-        except IndexError:
-            print("Table heading detected\n")
-        except pymysql.err.IntegrityError as e:
-            print("{}, {}".format(e.args[0], e.args[1]))
+            except pymysql.err.IntegrityError as e:
+                print("{}, {}".format(e.args[0], e.args[1]))
+        print("-----------")
 
 
 if __name__ == '__main__':
